@@ -12,5 +12,10 @@ program
   .command("init <name>")
   .description("init project")
   .action(require("../lib/init"));
+// register command refresh
+program
+  .command("refresh")
+  .description("refresh routers...")
+  .action(require("../lib/refresh"));
 program.parse(process.argv);
 // console.log(process.argv);
