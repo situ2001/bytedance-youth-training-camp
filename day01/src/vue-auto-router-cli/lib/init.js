@@ -43,19 +43,17 @@ module.exports = async (name) => {
   // await spawn(process.platform === "win32" ? "npm.cmd" : "npm", ["install"], {
   //   cwd: `./${name}`,
   // });
-  // TODO: FIX bug
   await spawn("npm", ["install"], { cwd: `./${name}` });
 
   // when done
-  // TODO: hint & run `npm run`
   log(`
-  ----------
-  Done
-  ----------
-  Usage
-    cd ${name}
-    npm run serve
-  ----------
+  ------------------
+  🎉 Done
+  ------------------
+  ✨ Usage
+      cd ${name}
+      npm run serve
+  ------------------
   `);
 
   open("http://127.0.0.1:8080");
