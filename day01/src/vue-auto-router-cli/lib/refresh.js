@@ -31,7 +31,7 @@ module.exports = async () => {
       const content = fs.readFileSync(templatePath).toString();
       const result = handlebars.compile(content)(meta);
       fs.writeFileSync(filePath, result);
-      console.log(chalk.green(`:fire: successfully updated routes`));
+      console.log(chalk.green(`🚀 successfully updated routes`));
     }
   }
 };

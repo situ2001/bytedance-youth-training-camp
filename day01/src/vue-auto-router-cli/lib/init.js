@@ -4,6 +4,7 @@ const clear = require("clear");
 const chalk = require("chalk");
 const log = (content) => console.log(chalk.green(content));
 const { clone } = require("./download");
+const open = require("open");
 
 const spawn = async (...args) => {
   // determine wether you are using win32 or not
@@ -13,13 +14,14 @@ const spawn = async (...args) => {
   }
   // Promise
   const { spawn } = require("child_process");
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     // when process stops
     const childProcess = spawn(...args);
     // child stream out => main stream in
     childProcess.stdout.pipe(process.stdout);
     childProcess.stderr.pipe(process.stderr);
-    childProcess.on("close", () => resolve);
+    childProcess.on("close", () => resolve());
+    childProcess.on("error", (err) => reject(err));
   });
 };
 
@@ -31,7 +33,7 @@ module.exports = async (name) => {
 
   // download template
   log(`Creating project ${name}`);
-  // await clone("github:su37josephxia/vue-template", name);
+  await clone("github:su37josephxia/vue-template", name);
 
   // download deps
   // child process
@@ -41,7 +43,12 @@ module.exports = async (name) => {
   // await spawn(process.platform === "win32" ? "npm.cmd" : "npm", ["install"], {
   //   cwd: `./${name}`,
   // });
-  await spawn("npm", ["install"], { cwd: `./${name}` });
+  // TODO: FIX bug
+  try {
+    await spawn("npm", ["install"], { cwd: `./${name}` });
+  } catch (e) {
+    console.error(e);
+  }
 
   // when done
   // TODO: hint & run `npm run`
