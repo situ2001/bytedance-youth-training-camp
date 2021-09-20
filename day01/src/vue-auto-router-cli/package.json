@@ -1,6 +1,6 @@
 {
   "name": "vue-auto-router-cli",
-  "version": "1.0.0",
+  "version": "1.14.514",
   "main": "index.js",
   "bin": {
     "my-cli": "./bin/cli.js"
@@ -14,6 +14,6 @@
     "figlet": "^1.5.2",
     "handlebars": "^4.7.7",
     "open": "^8.2.1",
-    "ora": "^6.0.1"
+    "ora": "^5.4.1"
   }
 }
