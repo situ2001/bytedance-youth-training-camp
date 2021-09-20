@@ -44,11 +44,7 @@ module.exports = async (name) => {
   //   cwd: `./${name}`,
   // });
   // TODO: FIX bug
-  try {
-    await spawn("npm", ["install"], { cwd: `./${name}` });
-  } catch (e) {
-    console.error(e);
-  }
+  await spawn("npm", ["install"], { cwd: `./${name}` });
 
   // when done
   // TODO: hint & run `npm run`
