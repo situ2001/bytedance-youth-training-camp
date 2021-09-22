@@ -1,0 +1,23 @@
+{
+  "name": "koa-setup",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "my-koa-setup": "./bin/index.js"
+  },
+  "scripts": {
+    "test": "RMDIR /Q/S foo && node index.js"
+  },
+  "dependencies": {
+    "commander": "^8.2.0",
+    "ejs": "^3.1.6",
+    "execa": "^5.1.1",
+    "inquirer": "^8.1.5",
+    "koa": "^2.13.1",
+    "koa-router": "^10.1.1",
+    "koa-static": "^5.0.0",
+    "prettier": "^2.4.1"
+  }
+}
