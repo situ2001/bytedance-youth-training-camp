@@ -24,16 +24,16 @@ module.exports = {
           parse: json5.parse,
         },
       },
-      // {
-      //   test: /\.md$/i,
-      //   loader: path.resolve(__dirname, "./src/loader.js"),
-      // },
+      {
+        test: /\.md$/i,
+        loader: path.resolve(__dirname, "./src/loader-cjs.js"),
+      },
     ],
   },
   plugins: [
     new HtmlWebpackPlugin({
       title: "Output Management",
     }),
-    new MyPlugin(),
+    // new MyPlugin(), // TODO
   ],
 };

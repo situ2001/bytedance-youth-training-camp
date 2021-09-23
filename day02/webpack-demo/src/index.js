@@ -1,7 +1,8 @@
 import "./style.css";
 
 // md test
-// import "./index.md"; // TODO
+import myMarkdownFile from "./index.md";
+console.log(myMarkdownFile);
 
 // lazy load
 const btn = document.createElement("button");
