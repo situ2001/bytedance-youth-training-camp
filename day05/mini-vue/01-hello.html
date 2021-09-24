@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <script src="https://unpkg.com/vue@next"></script>
+  <body>
+    <div id="app">
+      {{title}}
+      <comp></comp>
+    </div>
+  </body>
+  <script>
+    function useTitle() {
+      const state = Vue.reactive({
+        title: "state",
+      });
+      setTimeout(() => {
+        state.title = "Timeout";
+      }, 1000);
+
+      return state;
+    }
+    // init Vue
+    const app = Vue.createApp({
+      data() {
+        return {
+          title: "Hello",
+        };
+      },
+      // maintainability
+      setup() {
+        // Wow, react hook
+        const state = useTitle();
+        return state;
+      },
+      // render() {
+      //   // simplified API
+      //   return Vue.h(
+      //     "div",
+      //     {
+      //       title: this.title,
+      //     },
+      //     "xxx"
+      //   );
+      // },
+    });
+    // custom renderer??
+    const renderer = Vue.createRenderer({
+      // Overload
+      querySelector() {},
+      createElement() {},
+    });
+    renderer.createApp({});
+    // app.component("comp", {
+    //   template: "",
+    // });
+
+    // Define a new global component called button-counter
+    app.component("comp", {
+      data() {
+        return {
+          count: 0,
+        };
+      },
+      template: `
+    <button @click="count++">
+      You clicked me {{ count }} times.
+    </button>`,
+    });
+    app.mount("#app");
+  </script>
+</html>

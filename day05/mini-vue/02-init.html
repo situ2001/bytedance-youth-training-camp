@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">{{title}}</div>
+  </body>
+  <script>
+    const Vue = {
+      // extensible
+      createRenderer({ querySelector, insert }) {
+        return {
+          createApp(options) {
+            return {
+              mount(selector) {
+                console.log("mounted");
+                // 1. find parent element
+                const parent = document.querySelector(selector);
+                // 2. render the pages
+                // 2.1 process template
+                if (!options.render) {
+                  options.render = this.compile(parent.innerHTML);
+                }
+                // setup & other options
+                if (options.setup) {
+                  this.setupState = options.setup();
+                }
+                if (options.data) {
+                  this.data = options.data();
+                }
+                // app.xxx
+                const proxy = new Proxy(this, {
+                  get(target, key) {
+                    // retrieve from setup, else from data
+                    if (target.setupState && key in target.setupState) {
+                      return target.setupState[key];
+                    } else {
+                      return target.data[key];
+                    }
+                  },
+                  set(target, key, val) {
+                    if (target.setupState && key in target.setupState) {
+                      target.setupState[key] = val;
+                    } else {
+                      target.data[key] = val;
+                    }
+                  },
+                });
+                // 2.2 user-impl renderer
+                const el = options.render.call(proxy);
+                // 3. append to parent
+                parent.innerHTML = "";
+                parent.appendChild(el);
+              },
+              compile(template) {
+                // return a render function
+                // parse => AST => render
+                return function render() {
+                  const h3 = document.createElement("h3");
+                  h3.textContent = this.title;
+                  return h3;
+                };
+              },
+            };
+          },
+        };
+      },
+      createApp(options) {
+        // A web platform-specified renderer
+        const renderer = Vue.createRenderer({
+          querySelector(sel) {
+            return document.querySelector(sel);
+          },
+          insert(el, parent) {
+            parent.appendChild(el);
+          },
+        });
+        return renderer.createApp(options);
+      },
+    };
+  </script>
+  <script>
+    // init Vue
+    const app = Vue.createApp({
+      data() {
+        return {
+          title: "Hello world!",
+        };
+      },
+      setup() {
+        return {
+          title: "world Hello!",
+        };
+      },
+    });
+    app.mount("#app");
+  </script>
+</html>
