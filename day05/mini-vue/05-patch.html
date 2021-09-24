@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">{{title}}</div>
+  </body>
+  <script>
+    function h(tag, props, children) {
+      return { tag, props, children };
+    }
+    const Vue = {
+      // extensible
+      createRenderer({ querySelector, insert, createElement }) {
+        return {
+          createApp(options) {
+            return {
+              mount(selector) {
+                console.log("mounted");
+                // 1. find parent element
+                const parent = document.querySelector(selector);
+                // 2. render the pages
+                // 2.1 process template
+                if (!options.render) {
+                  options.render = this.compile(parent.innerHTML);
+                }
+                // setup & other options
+                if (options.setup) {
+                  this.setupState = options.setup();
+                }
+                if (options.data) {
+                  this.data = options.data();
+                }
+                // app.xxx
+                const proxy = new Proxy(this, {
+                  get(target, key) {
+                    // retrieve from setup, else from data
+                    if (target.setupState && key in target.setupState) {
+                      return target.setupState[key];
+                    } else {
+                      return target.data[key];
+                    }
+                  },
+                  set(target, key, val) {
+                    if (target.setupState && key in target.setupState) {
+                      target.setupState[key] = val;
+                    } else {
+                      target.data[key] = val;
+                    }
+                  },
+                });
+                // 2.2 user-impl renderer
+                this.update = effect(() => {
+                  // const el = options.render.call(proxy);
+                  // // 3. append to parent
+                  // parent.innerHTML = "";
+                  // parent.appendChild(el);
+                  const vnode = options.render.call(proxy);
+                  // vnode => DOM
+                  // create TREE
+                  if (!this.isMounted) {
+                    const el = this.createElm(vnode);
+                    parent.innerHTML = "";
+                    insert(el, parent);
+                    this.isMounted = true;
+                  } else {
+                    // Update
+                    this.patch(this._vnode, vnode);
+                  }
+                  this._vnode = vnode; // prev vnode
+                });
+                // this.update();
+              },
+              patch(n1, n2) {
+                const el = (n2.el = n1.el);
+                // old VS new
+                // 1. update: must update the same node
+                // 2.
+                if (n1.tag === n2.tag && n1.key === n2.key) {
+                  // update
+                  // TODO props
+                  // update children
+                  const oldChildren = n1.children;
+                  const newChildren = n2.children;
+
+                  if (typeof oldChildren === "string") {
+                    if (typeof newChildren === "string") {
+                      // update text
+                      if (oldChildren !== newChildren) {
+                        el.textContent = newChildren;
+                      }
+                    } else {
+                      // replace text with children elements
+                      // clear
+                      el.textContent = "";
+                      // append
+                      newChildren.forEach((child) =>
+                        insert(this.createElm(child), el)
+                      );
+                    }
+                  } else {
+                    if (typeof newChildren === "string") {
+                      el.textContent = newChildren;
+                    } else {
+                    }
+                  }
+                } else {
+                  // replace
+                }
+              },
+              createElm(vnode) {
+                const { tag, props, children } = vnode;
+                // traverse vnode & build a tree
+                const el = createElement(tag);
+                // TODO set attr
+                // recursion
+                if (typeof children === "string") {
+                  // no children element
+                  el.textContent = children;
+                } else {
+                  children.forEach((child) =>
+                    insert(this.createElm(child), el)
+                  );
+                }
+                // should save true DOM in vnode, in order to be used in the future
+                vnode.el = el;
+                return el;
+              },
+              compile(template) {
+                // return a render function
+                // parse => AST => render
+                return function render() {
+                  // const h3 = document.createElement("h3");
+                  // h3.textContent = this.title;
+                  // return h3;
+                  if (Array.isArray(this.title)) {
+                    return h(
+                      "h3",
+                      null,
+                      this.title.map((s) => h("p", null, s))
+                    );
+                  } else {
+                    return h("h3", null, this.title);
+                  }
+                  // return h("div", null, [
+                  //   h("p", null, this.title),
+                  //   h("p", null, this.title),
+                  //   h("p", null, this.title),
+                  // ]);
+                };
+              },
+            };
+          },
+        };
+      },
+      createApp(options) {
+        // A web platform-specified renderer
+        const renderer = Vue.createRenderer({
+          querySelector(sel) {
+            return document.querySelector(sel);
+          },
+          insert(el, parent) {
+            parent.appendChild(el);
+          },
+          createElement(tag) {
+            return document.createElement(tag);
+          },
+        });
+        return renderer.createApp(options);
+      },
+    };
+  </script>
+  <script>
+    // intercept the visit to proxy object from user
+    function reactive(obj) {
+      return new Proxy(obj, {
+        get(target, key) {
+          console.log("get key:", key);
+          // create dep
+          track(target, key);
+          return target[key];
+        },
+        set(target, key, val) {
+          console.log("set key:", key);
+          // get dep
+          target[key] = val;
+          // notify
+          trigger(target, key);
+          // app.update();
+        },
+      });
+    }
+
+    // map: dep <=> update func
+    // pass a callback fn
+    const effectStack = [];
+    function effect(fn) {
+      const eff = function () {
+        try {
+          effectStack.push(fn);
+          fn();
+        } finally {
+          effectStack.pop();
+        }
+      };
+      eff();
+      return eff;
+    }
+
+    // we can use a map: {target:{key:[update1, update2]}}
+    const targetMap = {}; // OR new WeakMap()
+
+    // build relation --- target, key & effectStack
+    function track(target, key) {
+      const effect = effectStack[effectStack.length - 1];
+      // test
+      let map = targetMap[target];
+      if (!map) {
+        map = targetMap[target] = {};
+      }
+      let deps = map[key];
+      if (!deps) {
+        deps = map[key] = []; // OR new Set()
+      }
+      // build relation
+      if (deps.indexOf(effect) === -1) {
+        deps.push(effect);
+      }
+    }
+
+    function trigger(target, key) {
+      const map = targetMap[target];
+      if (map) {
+        const deps = map[key];
+        if (deps) {
+          deps.forEach((dep) => dep());
+        }
+      }
+    }
+
+    // obj for test
+    const obj = reactive({ foo: "foo" });
+    effect(() => {
+      console.log(obj.foo);
+    });
+    obj.foo = "baz";
+
+    // init Vue
+    const app = Vue.createApp({
+      setup() {
+        const state = reactive({
+          title: "world, Hello!",
+        });
+        setTimeout(() => {
+          state.title = "Hello, world!".split('');
+        }, 2000);
+        return state;
+      },
+    });
+    app.mount("#app");
+  </script>
+</html>
