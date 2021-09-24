@@ -2,7 +2,7 @@
 
 Webpack is a bundler
 
-This demo includes basic usage, CSS loader, custom loader, lazy load, dev server, and plugin(WIP)
+This demo includes basic usage, CSS loader, custom loader, lazy load, dev server, and plugin.
 
 Some main ideas are showed as followed
 

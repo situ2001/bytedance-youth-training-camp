@@ -34,6 +34,6 @@ module.exports = {
     new HtmlWebpackPlugin({
       title: "Output Management",
     }),
-    // new MyPlugin(), // TODO
+    new MyPlugin(),
   ],
 };
